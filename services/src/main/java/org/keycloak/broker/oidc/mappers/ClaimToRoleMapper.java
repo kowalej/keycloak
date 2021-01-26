@@ -140,7 +140,7 @@ public class ClaimToRoleMapper extends AbstractClaimMapper {
 
     @Override
     public String getHelpText() {
-        return "If a claim exists, grant the user the specified realm or client role.";
+        return "If the claim exists and has the required value, grant the user the specified realm or client role.";
     }
 
 }

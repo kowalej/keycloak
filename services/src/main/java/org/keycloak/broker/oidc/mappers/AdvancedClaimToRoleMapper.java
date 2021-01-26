@@ -149,7 +149,7 @@ public class AdvancedClaimToRoleMapper extends AbstractClaimMapper {
 
     @Override
     public String getHelpText() {
-        return "If all claims exists, grant the user the specified realm or client role.";
+        return "If all claims exist and have the required values, grant the user the specified realm or client role.";
     }
 
     protected boolean hasAllClaimValues(IdentityProviderMapperModel mapperModel, BrokeredIdentityContext context) {
