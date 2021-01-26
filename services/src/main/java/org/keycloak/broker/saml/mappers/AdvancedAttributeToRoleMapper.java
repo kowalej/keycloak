@@ -147,7 +147,7 @@ public class AdvancedAttributeToRoleMapper extends AbstractIdentityProviderMappe
 
     @Override
     public String getHelpText() {
-        return "If the set of attributes exists and can be matched, grant the user the specified realm or client role.";
+        return "If all attributes exist and have the required values, grant the user the specified realm or client role.";
     }
 
     static RoleModel getRoleModel(RealmModel realm, String roleName) {
