@@ -43,7 +43,8 @@ import java.util.Optional;
 import java.util.Set;
 
 /**
- * @author <a href="mailto:bill@burkecentral.com">Bill Burke</a>
+ * @author <a href="mailto:bill@burkecentral.com">Bill Burke</a>,
+ * Jason Kowaleski
  * @version $Revision: 1 $
  */
 public class AttributeToGroupMapper extends AbstractIdentityProviderMapper {

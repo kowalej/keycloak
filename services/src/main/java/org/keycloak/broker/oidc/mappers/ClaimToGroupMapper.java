@@ -19,7 +19,6 @@ package org.keycloak.broker.oidc.mappers;
 
 import org.keycloak.broker.oidc.KeycloakOIDCIdentityProviderFactory;
 import org.keycloak.broker.oidc.OIDCIdentityProviderFactory;
-import org.keycloak.broker.oidc.mappers.AbstractClaimMapper;
 import org.keycloak.broker.provider.BrokeredIdentityContext;
 import org.keycloak.broker.provider.ConfigConstants;
 import org.keycloak.broker.provider.IdentityBrokerException;
@@ -71,7 +70,7 @@ public class ClaimToGroupMapper extends AbstractClaimMapper {
         property.setName(ConfigConstants.GROUP);
         property.setLabel("Group Path");
         property.setHelpText(
-                "Group to join if claim is present. Use the full group path. Ex. '/ParentGroup/ChildGroup' or '/TopLevelGroup'.");
+                "Group to join if claim with matching value is present. Use the full group path. Ex. '/ParentGroup/ChildGroup' or '/TopLevelGroup'.");
         property.setType(ProviderConfigProperty.STRING_TYPE);
         configProperties.add(property);
     }
@@ -109,28 +108,23 @@ public class ClaimToGroupMapper extends AbstractClaimMapper {
     }
 
     @Override
+    public String getHelpText() {
+        return "If the claim exists and has the required value, the user will become a member of the specified group.";
+    }
+
+    @Override
     public void importNewUser(KeycloakSession session, RealmModel realm, UserModel user,
             IdentityProviderMapperModel mapperModel, BrokeredIdentityContext context) {
-        String groupPath = mapperModel.getConfig().get(ConfigConstants.GROUP);
         if (hasClaimValue(mapperModel, context)) {
-            GroupModel group = KeycloakModelUtils.findGroupByPath(realm, groupPath);
-            if (group == null) {
-                throw new IdentityBrokerException("Unable to find group: " + groupPath);
-            }
-            user.joinGroup(group);
+            user.joinGroup(getGroupModel(realm, mapperModel));
         }
     }
 
     @Override
     public void updateBrokeredUserLegacy(KeycloakSession session, RealmModel realm, UserModel user,
             IdentityProviderMapperModel mapperModel, BrokeredIdentityContext context) {
-        String groupPath = mapperModel.getConfig().get(ConfigConstants.GROUP);
         if (!hasClaimValue(mapperModel, context)) {
-            GroupModel group = KeycloakModelUtils.findGroupByPath(realm, groupPath);
-            if (group == null) {
-                throw new IdentityBrokerException("Unable to find group: " + groupPath);
-            }
-            user.leaveGroup(group);
+            user.leaveGroup(getGroupModel(realm, mapperModel));
         }
 
     }
@@ -138,20 +132,19 @@ public class ClaimToGroupMapper extends AbstractClaimMapper {
     @Override
     public void updateBrokeredUser(KeycloakSession session, RealmModel realm, UserModel user,
             IdentityProviderMapperModel mapperModel, BrokeredIdentityContext context) {
+        if (!hasClaimValue(mapperModel, context)) {
+            user.leaveGroup(getGroupModel(realm, mapperModel));
+        } else {
+            user.joinGroup(getGroupModel(realm, mapperModel));
+        }
+    }
+
+    private GroupModel getGroupModel(RealmModel realm, IdentityProviderMapperModel mapperModel) {
         String groupPath = mapperModel.getConfig().get(ConfigConstants.GROUP);
         GroupModel group = KeycloakModelUtils.findGroupByPath(realm, groupPath);
         if (group == null) {
             throw new IdentityBrokerException("Unable to find group: " + groupPath);
         }
-        if (!hasClaimValue(mapperModel, context)) {
-            user.leaveGroup(group);
-        } else {
-            user.joinGroup(group);
-        }
-    }
-
-    @Override
-    public String getHelpText() {
-        return "If the claim exists and has the required value, the user will become a member of the specified group.";
+        return group;
     }
 }

@@ -46,8 +46,10 @@ import java.util.stream.Collectors;
 import static org.keycloak.utils.RegexUtils.valueMatchesRegex;
 
 /**
- * <a href="mailto:external.benjamin.weimer@bosch.io">Benjamin Weimer</a>,
+ * @author <a href="mailto:external.benjamin.weimer@bosch.io">Benjamin Weimer</a>,
  * <a href="mailto:external.martin.idel@bosch.io">Martin Idel</a>,
+ * Jason Kowaleski
+ * @version $Revision: 1 $
  */
 public class AdvancedAttributeToGroupMapper extends AbstractIdentityProviderMapper {
 

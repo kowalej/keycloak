@@ -19,7 +19,6 @@ package org.keycloak.broker.oidc.mappers;
 
 import org.keycloak.broker.oidc.KeycloakOIDCIdentityProviderFactory;
 import org.keycloak.broker.oidc.OIDCIdentityProviderFactory;
-import org.keycloak.broker.oidc.mappers.AbstractClaimMapper;
 import org.keycloak.broker.provider.BrokeredIdentityContext;
 import org.keycloak.broker.provider.ConfigConstants;
 import org.keycloak.broker.provider.IdentityBrokerException;
@@ -75,7 +74,7 @@ public class AdvancedClaimToGroupMapper extends AbstractClaimMapper {
         groupProperty.setName(ConfigConstants.GROUP);
         groupProperty.setLabel("Group Path");
         groupProperty.setHelpText(
-                "Group to join if claim is present. Use the full group path. Ex. '/ParentGroup/ChildGroup' or '/TopLevelGroup'.");
+                "Group to join if all claims with specified values are present. Use the full group path. Ex. '/ParentGroup/ChildGroup' or '/TopLevelGroup'.");
         groupProperty.setType(ProviderConfigProperty.STRING_TYPE);
         configProperties.add(groupProperty);
     }
@@ -113,51 +112,43 @@ public class AdvancedClaimToGroupMapper extends AbstractClaimMapper {
     }
 
     @Override
+    public String getHelpText() {
+        return "If all claims exist and have the required values, the user will become a member of the specified group.";
+    }
+
+    @Override
     public void importNewUser(KeycloakSession session, RealmModel realm, UserModel user,
             IdentityProviderMapperModel mapperModel, BrokeredIdentityContext context) {
-        String groupPath = mapperModel.getConfig().get(ConfigConstants.GROUP);
-        GroupModel group = getGroupModel(realm, groupPath);
-
         if (hasAllClaimValues(mapperModel, context)) {
-            user.joinGroup(group);
+            user.joinGroup(getGroupModel(realm, mapperModel));
         }
     }
 
     @Override
     public void updateBrokeredUserLegacy(KeycloakSession session, RealmModel realm, UserModel user,
             IdentityProviderMapperModel mapperModel, BrokeredIdentityContext context) {
-        String groupPath = mapperModel.getConfig().get(ConfigConstants.GROUP);
-        GroupModel group = getGroupModel(realm, groupPath);
-
         if (!hasAllClaimValues(mapperModel, context)) {
-            user.leaveGroup(group);
+            user.leaveGroup(getGroupModel(realm, mapperModel));
         }
-
     }
 
     @Override
     public void updateBrokeredUser(KeycloakSession session, RealmModel realm, UserModel user,
             IdentityProviderMapperModel mapperModel, BrokeredIdentityContext context) {
-        String groupPath = mapperModel.getConfig().get(ConfigConstants.GROUP);
-        GroupModel group = getGroupModel(realm, groupPath);
         if (hasAllClaimValues(mapperModel, context)) {
-            user.joinGroup(group);
+            user.joinGroup(getGroupModel(realm, mapperModel));
         } else {
-            user.leaveGroup(group);
+            user.leaveGroup(getGroupModel(realm, mapperModel));
         }
     }
 
-    private GroupModel getGroupModel(RealmModel realm, String groupPath) {
+    private GroupModel getGroupModel(RealmModel realm, IdentityProviderMapperModel mapperModel) {
+        String groupPath = mapperModel.getConfig().get(ConfigConstants.GROUP);
         GroupModel group = KeycloakModelUtils.findGroupByPath(realm, groupPath);
         if (group == null) {
             throw new IdentityBrokerException("Unable to find group: " + groupPath);
         }
         return group;
-    }
-
-    @Override
-    public String getHelpText() {
-        return "If all claims exist and have the required values, the user will become a member of the specified group.";
     }
 
     protected boolean hasAllClaimValues(IdentityProviderMapperModel mapperModel, BrokeredIdentityContext context) {
