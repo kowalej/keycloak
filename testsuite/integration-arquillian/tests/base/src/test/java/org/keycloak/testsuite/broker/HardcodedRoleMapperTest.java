@@ -82,16 +82,16 @@ public class HardcodedRoleMapperTest extends AbstractRoleMapperTest {
 
     @Override
     protected void createMapperInIdp(IdentityProviderRepresentation idp, IdentityProviderMapperSyncMode syncMode) {
-        IdentityProviderMapperRepresentation advancedClaimToRoleMapper = new IdentityProviderMapperRepresentation();
-        advancedClaimToRoleMapper.setName("oidc-hardcoded-role-mapper");
-        advancedClaimToRoleMapper.setIdentityProviderMapper(HardcodedRoleMapper.PROVIDER_ID);
-        advancedClaimToRoleMapper.setConfig(ImmutableMap.<String, String>builder()
+        IdentityProviderMapperRepresentation hardcodedRoleMapper = new IdentityProviderMapperRepresentation();
+        hardcodedRoleMapper.setName("oidc-hardcoded-role-mapper");
+        hardcodedRoleMapper.setIdentityProviderMapper(HardcodedRoleMapper.PROVIDER_ID);
+        hardcodedRoleMapper.setConfig(ImmutableMap.<String, String>builder()
                 .put(IdentityProviderMapperModel.SYNC_MODE, syncMode.toString())
                 .put(ConfigConstants.ROLE, CLIENT_ROLE_MAPPER_REPRESENTATION)
                 .build());
 
         IdentityProviderResource idpResource = realm.identityProviders().get(idp.getAlias());
-        advancedClaimToRoleMapper.setIdentityProviderAlias(bc.getIDPAlias());
-        idpResource.addMapper(advancedClaimToRoleMapper).close();
+        hardcodedRoleMapper.setIdentityProviderAlias(bc.getIDPAlias());
+        idpResource.addMapper(hardcodedRoleMapper).close();
     }
 }

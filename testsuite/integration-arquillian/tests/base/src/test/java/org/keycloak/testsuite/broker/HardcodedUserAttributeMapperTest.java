@@ -100,18 +100,18 @@ public class HardcodedUserAttributeMapperTest extends AbstractIdentityProviderMa
     }
 
     protected void createMapperInIdp(IdentityProviderRepresentation idp, IdentityProviderMapperSyncMode syncMode) {
-        IdentityProviderMapperRepresentation advancedClaimToRoleMapper = new IdentityProviderMapperRepresentation();
-        advancedClaimToRoleMapper.setName("hardcoded-attribute-mapper");
-        advancedClaimToRoleMapper.setIdentityProviderMapper(HardcodedAttributeMapper.PROVIDER_ID);
-        advancedClaimToRoleMapper.setConfig(ImmutableMap.<String, String>builder()
+        IdentityProviderMapperRepresentation hardcodedAttributeMapper = new IdentityProviderMapperRepresentation();
+        hardcodedAttributeMapper.setName("hardcoded-attribute-mapper");
+        hardcodedAttributeMapper.setIdentityProviderMapper(HardcodedAttributeMapper.PROVIDER_ID);
+        hardcodedAttributeMapper.setConfig(ImmutableMap.<String, String>builder()
             .put(IdentityProviderMapperModel.SYNC_MODE, syncMode.toString())
             .put(HardcodedAttributeMapper.ATTRIBUTE, USER_ATTRIBUTE)
             .put(HardcodedAttributeMapper.ATTRIBUTE_VALUE, USER_ATTRIBUTE_VALUE)
             .build());
 
         IdentityProviderResource idpResource = realm.identityProviders().get(idp.getAlias());
-        advancedClaimToRoleMapper.setIdentityProviderAlias(bc.getIDPAlias());
-        idpResource.addMapper(advancedClaimToRoleMapper).close();
+        hardcodedAttributeMapper.setIdentityProviderAlias(bc.getIDPAlias());
+        idpResource.addMapper(hardcodedAttributeMapper).close();
     }
 
     protected void createUserInProviderRealm() {
