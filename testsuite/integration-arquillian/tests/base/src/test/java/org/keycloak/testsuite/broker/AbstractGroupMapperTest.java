@@ -4,30 +4,25 @@ import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.not;
 import static org.junit.Assert.assertThat;
 import static org.keycloak.testsuite.broker.BrokerTestTools.getConsumerRoot;
-import static org.keycloak.testsuite.util.WaitUtils.pause;
 
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
 import org.keycloak.admin.client.resource.UserResource;
 import org.keycloak.models.IdentityProviderMapperSyncMode;
 import org.keycloak.representations.idm.IdentityProviderRepresentation;
-import org.keycloak.representations.idm.RoleRepresentation;
+import org.keycloak.representations.idm.GroupRepresentation;
 import org.keycloak.representations.idm.UserRepresentation;
-import org.openqa.selenium.firefox.FirefoxDriver;
 
 /**
  * @author hmlnarik,
  * <a href="mailto:external.benjamin.weimer@bosch-si.com">Benjamin Weimer</a>,
  * <a href="mailto:external.martin.idel@bosch.io">Martin Idel</a>,
+ * Jason Kowaleski
  */
-public abstract class AbstractRoleMapperTest extends AbstractIdentityProviderMapperTest {
+public abstract class AbstractGroupMapperTest extends AbstractIdentityProviderMapperTest {
 
-    private static final String CLIENT = "realm-management";
-    private static final String CLIENT_ROLE = "view-realm";
-    public static final String ROLE_USER = "user";
-    public static final String CLIENT_ROLE_MAPPER_REPRESENTATION = CLIENT + "." + CLIENT_ROLE;
+    public static final String GROUP_PATH = "/Parent/Child";
 
     protected abstract void createMapperInIdp(IdentityProviderRepresentation idp, IdentityProviderMapperSyncMode syncMode);
 
@@ -41,15 +36,15 @@ public abstract class AbstractRoleMapperTest extends AbstractIdentityProviderMap
             createMapperInIdp(idp, syncMode);
         }
         createUserInProviderRealm(userConfig);
-        createUserRoleAndGrantToUserInProviderRealm();
+        createUserGroupAndUserJoinsInProviderRealm();
 
         logInAsUserInIDPForFirstTime();
 
         UserRepresentation user = findUser(bc.consumerRealmName(), bc.getUserLogin(), bc.getUserEmail());
         if (!createAfterFirstLogin) {
-            assertThatRoleHasBeenAssignedInConsumerRealmTo(user);
+            assertThatGroupHasBeenJoinedInConsumerRealmTo(user);
         } else {
-            assertThatRoleHasNotBeenAssignedInConsumerRealmTo(user);
+            assertThatGroupHasNotBeenJoinedInConsumerRealmTo(user);
         }
 
         if (createAfterFirstLogin) {
@@ -64,19 +59,21 @@ public abstract class AbstractRoleMapperTest extends AbstractIdentityProviderMap
         return user;
     }
 
-    protected void createUserRoleAndGrantToUserInProviderRealm() {
-        RoleRepresentation userRole = new RoleRepresentation(ROLE_USER, null, false);
-        adminClient.realm(bc.providerRealmName()).roles().create(userRole);
-        RoleRepresentation role = adminClient.realm(bc.providerRealmName()).roles().get(ROLE_USER).toRepresentation();
+    protected void createUserGroupAndUserJoinsInProviderRealm() {
+        GroupRepresentation userGroup = new GroupRepresentation();
+        userGroup.setPath(GROUP_PATH);
+        userGroup.setName("Some Nested Group");
+        adminClient.realm(bc.providerRealmName()).groups().add(userGroup);
+        GroupRepresentation group = adminClient.realm(bc.providerRealmName()).getGroupByPath(GROUP_PATH);
         UserResource userResource = adminClient.realm(bc.providerRealmName()).users().get(userId);
-        userResource.roles().realmLevel().add(Collections.singletonList(role));
+        userResource.joinGroup(group.getId());
     }
 
-    protected void assertThatRoleHasBeenAssignedInConsumerRealmTo(UserRepresentation user) {
-        assertThat(user.getClientRoles().get(CLIENT), contains(CLIENT_ROLE));
+    protected void assertThatGroupHasBeenJoinedInConsumerRealmTo(UserRepresentation user) {
+        assertThat(user.getGroups(), contains(GROUP_PATH));
     }
 
-    protected void assertThatRoleHasNotBeenAssignedInConsumerRealmTo(UserRepresentation user) {
-        assertThat(user.getClientRoles().get(CLIENT), not(contains(CLIENT_ROLE)));
+    protected void assertThatGroupHasNotBeenJoinedInConsumerRealmTo(UserRepresentation user) {
+        assertThat(user.getGroups(), not(contains(GROUP_PATH)));
     }
 }
